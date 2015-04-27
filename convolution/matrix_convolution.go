@@ -35,7 +35,11 @@ func main() {
 	toimgpng, _ := os.Create("new.png")
 	defer toimgpng.Close()
 
-	png.Encode(toimgpng, image_result)
+	if err := png.Encode(toimgpng, image_result); err != nil {
+		fmt.Println("[-] Error trying to create the new image.", err)
+	} else {
+		fmt.Println("[+] Image created", toimgpng.Name())
+	}
 }
 
 //
