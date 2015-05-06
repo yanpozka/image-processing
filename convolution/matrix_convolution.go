@@ -52,7 +52,7 @@ func main() {
 //  1 -4  1
 //  1  1  1
 //
-// TODO: Refactore a little bit to allow a custom matrix instead of a fixed one
+// TODO: Refactor a little bit to allow a custom matrix instead of that fixed one
 //
 func applyMatrixPixel(src image.Image, dst *image.Gray, r, c int) bool {
 	pixel_value := getPixInt(src.At(r, c))
