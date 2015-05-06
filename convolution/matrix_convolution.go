@@ -24,15 +24,18 @@ func main() {
 	var W, H int = s.X, s.Y
 	fmt.Println(W, H)
 
-	image_result := image.NewRGBA(image.Rect(0, 0, W, H))
+	image_result := image.NewGray(img.Bounds())
+	var count int64 = 0
 
 	// fmt.Println(img.At(-1, 0) : we can access with negative index
 	for i := 0; i < H; i++ {
 		for k := 0; k < W; k++ {
-			applyMatrixPixel(img, image_result, i, k)
+			if applyMatrixPixel(img, image_result, i, k) {
+				count++
+			}
 		}
 	}
-	toimgpng, _ := os.Create("new.png")
+	toimgpng, _ := os.Create("../../new.png")
 	defer toimgpng.Close()
 
 	if err := png.Encode(toimgpng, image_result); err != nil {
@@ -40,22 +43,57 @@ func main() {
 	} else {
 		fmt.Println("[+] Image created", toimgpng.Name())
 	}
+	fmt.Println(count)
 }
 
 //
-// By the moment only displace the image 5 pixels up left
+// Matrix of convolution is:
+//  1  1  1
+//  1 -4  1
+//  1  1  1
 //
-func applyMatrixPixel(src image.Image, dst *image.RGBA, r, c int) {
-	// pixel_value := getPixInt(src.At(r, c))
-	// fmt.Println(pixel_value)
+// TODO: Refactore a little bit to allow a custom matrix instead of a fixed one
+//
+func applyMatrixPixel(src image.Image, dst *image.Gray, r, c int) bool {
+	pixel_value := getPixInt(src.At(r, c))
 
-	// TODO: transform pixel after calculation
+	// border pixels
+	sum := getPixInt(src.At(r, c-1)) + getPixInt(src.At(r-1, c)) +
+		getPixInt(src.At(r, c+1)) + getPixInt(src.At(r+1, c))
 
-	dst.Set(r, c, src.At(r+5, c+5))
+	// center pixel
+	result := sum + (pixel_value * -4)
+
+	var ok bool = true
+	new_color := generateWhiteColor()
+	if result < 0 {
+		ok = false
+	} else {
+		new_color = getColorFromPixelInt(result)
+	}
+	dst.Set(r, c, new_color)
+	return ok
 }
 
 //
-func getPixInt(pixel color.Color) uint32 {
+func generateWhiteColor() color.Color {
+	return color.RGBA{R: 255, G: 255, B: 255}
+}
+
+//
+func getColorFromPixelInt(n int32) color.Color {
+	var num uint32 = uint32(n)
+	blue := uint8(num)
+	num >>= 8
+	green := uint8(num)
+	num >>= 8
+	red := uint8(num)
+
+	return color.RGBA{R: red, G: green, B: blue}
+}
+
+// integer = red + green + blue (in that order)
+func getPixInt(pixel color.Color) int32 {
 	var r, g, b, _ uint32 = pixel.RGBA()
 	red, green, blue := uint32(r>>8), uint32(g>>8), uint32(b>>8)
 	var numpixel uint32 = red
@@ -64,5 +102,5 @@ func getPixInt(pixel color.Color) uint32 {
 	numpixel <<= 8
 	numpixel |= blue
 
-	return numpixel
+	return int32(numpixel)
 }
