@@ -1,2 +1,2 @@
-Manipulation the image with Golang.
+Image Manipulation with Golang.
 Algorithms for image processing.
